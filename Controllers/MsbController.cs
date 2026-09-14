@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace GSB.Test.Api.Controllers;
 
 [ApiController]
-[Route("api/msb")]
+[Route("api/gsb")]
 public class MsbController : ControllerBase
 {
     private readonly IMsbService _msbService;
@@ -15,8 +15,8 @@ public class MsbController : ControllerBase
         _msbService = msbService;
     }
 
-    [HttpPost("document-verification-inquiry")]
-    public async Task<IActionResult> DocumentVerificationInquiry([FromBody] G2GInquiryRequest request)
+    [HttpPost("inquiry-msb")]
+    public async Task<IActionResult> InquiryMsb([FromBody] G2GInquiryRequest request)
     {
         try
         {
