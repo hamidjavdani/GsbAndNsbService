@@ -1,6 +1,77 @@
-@GSB.Test.Api_HostAddress = http://localhost:5118
+@HostAddress = http://localhost:5118
+@MsbApiKey = PUT_TEST_KEY_HERE
 
-GET {{GSB.Test.Api_HostAddress}}/weatherforecast/
-Accept: application/json
+### 1) Send document verification inquiry through local API
+POST {{HostAddress}}/api/msb/document-verification-inquiry
+Content-Type: application/json
 
-###
+{
+  "requesterName": "متقاضی تست",
+  "requesterFamily": "متقاضی تست",
+  "requesterNationalCode": "0040053504",
+  "requesterOfficProvinceName": "استان تست",
+  "requesterOfficeCode": "14002764962",
+  "requesterOfficNumber": "2313325",
+  "ruleId": "mhrne7iv",
+  "requestUniqueId": "140504061103",
+  "ElectronicEstateNoteNo": "140420301079027364",
+  "nationalitycode": "0070175713"
+}
+
+### 2) Simulate successful MSB callback (code 200)
+POST {{HostAddress}}/document-ownership-verification/create
+Content-Type: application/json
+X-MSB-Api-Key: {{MsbApiKey}}
+
+{
+  "organId": "01234567890",
+  "code": 200,
+  "owTrakingCode": "80000010085396",
+  "data": {
+    "GetKmlPolygonInfo": "{\"type\":\"Polygon\",\"coordinates\":[[[51.4954549437672,35.7184662091126],[51.4954301058645,35.7183830912944],[51.4954549437672,35.7184662091126]]]}",
+    "ConfirmDocumentByElectronicInfo": {
+      "Successful": true,
+      "JamCode": "54481339528283900000000",
+      "ElectronicEstateNoteNo": "140320301151026370",
+      "OwnerNationalityCode": "0681655070",
+      "OwnerName": "اسمعیل",
+      "OwnerFamily": "اسماعیلی راد",
+      "Area": 63.7,
+      "HasOtherRestriction": false,
+      "HasRahn": false,
+      "IsArrested": false,
+      "HasEasement": false,
+      "TheShareOf": 3,
+      "TotalShare": 6,
+      "Sellable": true
+    },
+    "ConfirmDocumentInfo": {
+      "Successful": "true",
+      "Area": "63.7",
+      "JamCode": "54481339528283900000000",
+      "OwnerName": "اسمعیل",
+      "OwnerFamily": "اسماعیلی راد",
+      "HasOtherRestriction": "false",
+      "HasRahn": "false",
+      "IsArrested": "false",
+      "HasEasement": "false",
+      "TheShareOf": "3",
+      "TotalShare": "6"
+    }
+  }
+}
+
+### 3) Simulate MSB callback error (code 201)
+POST {{HostAddress}}/document-ownership-verification/create
+Content-Type: application/json
+X-MSB-Api-Key: {{MsbApiKey}}
+
+{
+  "organId": "01234567890",
+  "code": 201,
+  "owTrakingCode": "80000010085396",
+  "error": {
+    "errorMessage": "عدم پاسخ سرویس ثبت",
+    "errorCode": 900
+  }
+}
