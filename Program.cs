@@ -30,6 +30,7 @@ builder.Services.AddHttpClient("MSB", client =>
 builder.Services.AddScoped<IGsbService, GsbService>();
 builder.Services.AddScoped<IMsbService, MsbService>();
 builder.Services.AddScoped<IRegistrationCallbackService, RegistrationCallbackService>();
+builder.Services.AddScoped<IMsbCallbackService, MsbCallbackService>();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
