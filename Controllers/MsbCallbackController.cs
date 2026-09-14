@@ -6,6 +6,7 @@ using System.Globalization;
 namespace GSB.Test.Api.Controllers;
 
 [ApiController]
+[Route("api/registration")]
 public class MsbCallbackController : ControllerBase
 {
     private readonly IMsbCallbackService _service;
@@ -19,8 +20,8 @@ public class MsbCallbackController : ControllerBase
         _configuration = configuration;
     }
 
-    [HttpPost("/document-ownership-verification/create")]
-    public async Task<IActionResult> Create([FromBody] MsbCallbackRequest request)
+    [HttpPost("document-inquiry-response-msb")]
+    public async Task<IActionResult> DocumentInquiryResponseMsb([FromBody] MsbCallbackRequest request)
     {
         var headerName = _configuration["MSB:ApiKeyHeaderName"] ?? "X-MSB-Api-Key";
         var apiKey = Request.Headers[headerName].FirstOrDefault();
