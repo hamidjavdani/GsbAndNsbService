@@ -1,0 +1,6 @@
+@GSB.Test.Api_HostAddress = http://localhost:5118
+
+GET {{GSB.Test.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

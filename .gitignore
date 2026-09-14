@@ -1,0 +1,15 @@
+bin/
+obj/
+.vs/
+*.user
+*.suo
+
+# Local configuration may contain credentials and API secrets.
+appsettings.json
+appsettings.*.json
+!appsettings.example.json
+
+# Local publishing artifacts and secrets.
+Properties/PublishProfiles/
+*.pubxml.user
+
