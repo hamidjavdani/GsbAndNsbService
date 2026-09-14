@@ -22,41 +22,27 @@ namespace GSB.Test.Api.Controllers
 
         [HttpPost("document-inquiry-response")]
         [HttpPost("~/document-ownership-verification/create")]
-        public async Task<IActionResult> DocumentInquiryResponse(
-            [FromBody] RegistrationCallbackRequest request)
+        public async Task<IActionResult> DocumentInquiryResponse([FromBody] RegistrationCallbackRequest request)
         {
-            var apiKey = Request.Headers["X-MSB-Api-Key"].FirstOrDefault();
+            var headerName = _configuration["MSB:ApiKeyHeaderName"] ?? "X-MSB-Api-Key";
+            var apiKey = Request.Headers[headerName].FirstOrDefault();
             var expectedApiKey = _configuration["MSB:ApiKey"] ?? _configuration["CallbackApiKey"];
 
-            if (string.IsNullOrWhiteSpace(apiKey) ||
-                string.IsNullOrWhiteSpace(expectedApiKey) ||
-                apiKey != expectedApiKey)
-            {
+            if (string.IsNullOrWhiteSpace(apiKey) || string.IsNullOrWhiteSpace(expectedApiKey) || apiKey != expectedApiKey)
                 return Unauthorized(CreateErrorAck("INVALID_API_KEY", "کلید دسترسی معتبر نیست."));
-            }
 
-            if (string.IsNullOrWhiteSpace(request.OrganId) ||
-                string.IsNullOrWhiteSpace(request.OwTrakingCode))
-            {
+            if (string.IsNullOrWhiteSpace(request.OrganId) || string.IsNullOrWhiteSpace(request.OwTrakingCode))
                 return BadRequest(CreateErrorAck("INVALID_DATA", "organId و owTrakingCode الزامی هستند."));
-            }
 
             if (request.Code == 200 && request.Data is null)
-            {
                 return BadRequest(CreateErrorAck("INVALID_DATA", "برای کد 200 فیلد data الزامی است."));
-            }
 
             if (request.Code == 201 && request.Error is null)
-            {
                 return BadRequest(CreateErrorAck("INVALID_DATA", "برای کد 201 فیلد error الزامی است."));
-            }
 
             var saved = await _service.SaveCallbackAsync(request);
-
             if (!saved)
-            {
                 return StatusCode(500, CreateErrorAck("PROCESSING_ERROR", "ذخیره پاسخ ناموفق بود."));
-            }
 
             return Ok(new MsbCallbackAckResponse
             {
@@ -68,17 +54,14 @@ namespace GSB.Test.Api.Controllers
             });
         }
 
-        private static MsbCallbackAckResponse CreateErrorAck(string message, string description)
+        private static MsbCallbackAckResponse CreateErrorAck(string message, string description) => new()
         {
-            return new MsbCallbackAckResponse
-            {
-                MsbTrackingCode = null,
-                Code = "000",
-                Message = message,
-                Description = description,
-                Timestamp = GetPersianTimestamp()
-            };
-        }
+            MsbTrackingCode = null,
+            Code = "000",
+            Message = message,
+            Description = description,
+            Timestamp = GetPersianTimestamp()
+        };
 
         private static string GetPersianTimestamp()
         {
