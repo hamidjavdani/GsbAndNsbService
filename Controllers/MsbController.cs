@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace GSB.Test.Api.Controllers;
 
 [ApiController]
-[Route("api/gsb")]
+[Route("msb")]
 public class MsbController : ControllerBase
 {
     private readonly IMsbService _msbService;
@@ -15,7 +15,7 @@ public class MsbController : ControllerBase
         _msbService = msbService;
     }
 
-    [HttpPost("inquiry-msb")]
+    [HttpPost("inquiry")]
     public async Task<IActionResult> InquiryMsb([FromBody] G2GInquiryRequest request)
     {
         try
