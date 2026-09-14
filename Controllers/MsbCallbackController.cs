@@ -6,7 +6,7 @@ using System.Globalization;
 namespace GSB.Test.Api.Controllers;
 
 [ApiController]
-[Route("api/registration")]
+[Route("api/msb/registration")]
 public class MsbCallbackController : ControllerBase
 {
     private readonly IMsbCallbackService _service;
@@ -20,7 +20,7 @@ public class MsbCallbackController : ControllerBase
         _configuration = configuration;
     }
 
-    [HttpPost("document-inquiry-response-msb")]
+    [HttpPost("document-inquiry-response")]
     public async Task<IActionResult> DocumentInquiryResponseMsb([FromBody] MsbCallbackRequest request)
     {
         var headerName = _configuration["MSB:ApiKeyHeaderName"] ?? "X-MSB-Api-Key";
