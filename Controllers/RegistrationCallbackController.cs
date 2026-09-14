@@ -1,6 +1,7 @@
-﻿using GSB.Test.Api.Models.Callback;
+using GSB.Test.Api.Models.Callback;
 using GSB.Test.Api.Services;
 using Microsoft.AspNetCore.Mvc;
+using System.Globalization;
 
 namespace GSB.Test.Api.Controllers
 {
@@ -20,29 +21,70 @@ namespace GSB.Test.Api.Controllers
         }
 
         [HttpPost("document-inquiry-response")]
+        [HttpPost("~/document-ownership-verification/create")]
         public async Task<IActionResult> DocumentInquiryResponse(
             [FromBody] RegistrationCallbackRequest request)
         {
-            var apiKey = Request.Headers["X-Api-Key"].FirstOrDefault();
+            var apiKey = Request.Headers["X-MSB-Api-Key"].FirstOrDefault();
+            var expectedApiKey = _configuration["MSB:ApiKey"] ?? _configuration["CallbackApiKey"];
 
             if (string.IsNullOrWhiteSpace(apiKey) ||
-                apiKey != _configuration["CallbackApiKey"])
+                string.IsNullOrWhiteSpace(expectedApiKey) ||
+                apiKey != expectedApiKey)
             {
-                return Unauthorized(new
-                {
-                    code = 401,
-                    msg = "Unauthorized"
-                });
+                return Unauthorized(CreateErrorAck("INVALID_API_KEY", "کلید دسترسی معتبر نیست."));
             }
 
-            _ = await _service.SaveCallbackAsync(request);
-
-            return Ok(new
+            if (string.IsNullOrWhiteSpace(request.OrganId) ||
+                string.IsNullOrWhiteSpace(request.OwTrakingCode))
             {
-                code = 200,
-                msg = "OK"
+                return BadRequest(CreateErrorAck("INVALID_DATA", "organId و owTrakingCode الزامی هستند."));
+            }
+
+            if (request.Code == 200 && request.Data is null)
+            {
+                return BadRequest(CreateErrorAck("INVALID_DATA", "برای کد 200 فیلد data الزامی است."));
+            }
+
+            if (request.Code == 201 && request.Error is null)
+            {
+                return BadRequest(CreateErrorAck("INVALID_DATA", "برای کد 201 فیلد error الزامی است."));
+            }
+
+            var saved = await _service.SaveCallbackAsync(request);
+
+            if (!saved)
+            {
+                return StatusCode(500, CreateErrorAck("PROCESSING_ERROR", "ذخیره پاسخ ناموفق بود."));
+            }
+
+            return Ok(new MsbCallbackAckResponse
+            {
+                MsbTrackingCode = request.OwTrakingCode,
+                Code = "200",
+                Message = "OK",
+                Description = "پردازش درخواست موفق",
+                Timestamp = GetPersianTimestamp()
             });
+        }
+
+        private static MsbCallbackAckResponse CreateErrorAck(string message, string description)
+        {
+            return new MsbCallbackAckResponse
+            {
+                MsbTrackingCode = null,
+                Code = "000",
+                Message = message,
+                Description = description,
+                Timestamp = GetPersianTimestamp()
+            };
+        }
+
+        private static string GetPersianTimestamp()
+        {
+            var now = DateTime.Now;
+            var calendar = new PersianCalendar();
+            return $"{calendar.GetYear(now):0000}/{calendar.GetMonth(now):00}/{calendar.GetDayOfMonth(now):00}-{now:HH:mm:ss}";
         }
     }
 }
-
