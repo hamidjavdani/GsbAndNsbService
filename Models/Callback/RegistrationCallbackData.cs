@@ -1,11 +1,12 @@
-﻿using System.Text.Json.Serialization;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace GSB.Test.Api.Models.Callback;
 
 public class RegistrationCallbackData
 {
     [JsonPropertyName("GetKmlPolygonInfo")]
-    public string? GetKmlPolygonInfo { get; set; }
+    public JsonElement? GetKmlPolygonInfo { get; set; }
 
     [JsonPropertyName("ConfirmDocumentByElectronicInfo")]
     public ConfirmDocumentByElectronicInfo? ConfirmDocumentByElectronicInfo { get; set; }
