@@ -1,8 +1,8 @@
 @HostAddress = http://localhost:5118
 @MsbApiKey = PUT_TEST_KEY_HERE
 
-### 1) Send document verification inquiry through local API
-POST {{HostAddress}}/api/msb/document-verification-inquiry
+### 1) Send document verification inquiry through local API (MSB)
+POST {{HostAddress}}/api/gsb/inquiry-msb
 Content-Type: application/json
 
 {
@@ -19,7 +19,7 @@ Content-Type: application/json
 }
 
 ### 2) Simulate successful MSB callback (code 200)
-POST {{HostAddress}}/document-ownership-verification/create
+POST {{HostAddress}}/api/registration/document-inquiry-response-msb
 Content-Type: application/json
 X-MSB-Api-Key: {{MsbApiKey}}
 
@@ -62,7 +62,7 @@ X-MSB-Api-Key: {{MsbApiKey}}
 }
 
 ### 3) Simulate MSB callback error (code 201)
-POST {{HostAddress}}/document-ownership-verification/create
+POST {{HostAddress}}/api/registration/document-inquiry-response-msb
 Content-Type: application/json
 X-MSB-Api-Key: {{MsbApiKey}}
 
