@@ -2,7 +2,7 @@
 @MsbApiKey = PUT_TEST_KEY_HERE
 
 ### 1) Send document verification inquiry through local API (MSB)
-POST {{HostAddress}}/api/gsb/inquiry-msb
+POST {{HostAddress}}/msb/inquiry
 Content-Type: application/json
 
 {
@@ -19,7 +19,7 @@ Content-Type: application/json
 }
 
 ### 2) Simulate successful MSB callback (code 200)
-POST {{HostAddress}}/api/registration/document-inquiry-response-msb
+POST {{HostAddress}}/api/msb/registration/document-inquiry-response
 Content-Type: application/json
 X-MSB-Api-Key: {{MsbApiKey}}
 
@@ -62,7 +62,7 @@ X-MSB-Api-Key: {{MsbApiKey}}
 }
 
 ### 3) Simulate MSB callback error (code 201)
-POST {{HostAddress}}/api/registration/document-inquiry-response-msb
+POST {{HostAddress}}/api/msb/registration/document-inquiry-response
 Content-Type: application/json
 X-MSB-Api-Key: {{MsbApiKey}}
 
