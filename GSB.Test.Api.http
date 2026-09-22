@@ -19,7 +19,7 @@ Content-Type: application/json
 }
 
 ### 2) Simulate successful MSB callback (code 200)
-POST {{HostAddress}}/api/msb/registration/document-inquiry-response
+POST {{HostAddress}}/document-ownership-verification/v1/create
 Content-Type: application/json
 X-MSB-Api-Key: {{MsbApiKey}}
 
