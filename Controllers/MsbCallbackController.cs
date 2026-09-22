@@ -21,6 +21,7 @@ public class MsbCallbackController : ControllerBase
     }
 
     [HttpPost("document-inquiry-response")]
+    [HttpPost("/document-ownership-verification/v1/create")]
     public async Task<IActionResult> DocumentInquiryResponseMsb([FromBody] MsbCallbackRequest request)
     {
         var headerName = _configuration["MSB:ApiKeyHeaderName"] ?? "X-MSB-Api-Key";
