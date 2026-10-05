@@ -1,4 +1,4 @@
-﻿using GSB.Test.Api.Models.Callback;
+using GSB.Test.Api.Models.Callback;
 using GSB.Test.Api.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -43,6 +43,50 @@ namespace GSB.Test.Api.Controllers
                 msg = "OK"
             });
         }
+
+        /// <summary>
+        /// دریافت پاسخ وضعیت ثبت در فرایند ماده 14 از MSB.
+        /// </summary>
+        [HttpPost("~/made-14/registration-response/v1/create")]
+        public async Task<IActionResult> RegistrationResponse(
+            [FromBody] RegistrationStatusCallbackRequest request)
+        {
+            var apiKey = Request.Headers["X-MSB-Api-Key"].FirstOrDefault();
+
+            if (string.IsNullOrWhiteSpace(apiKey) ||
+                apiKey != _configuration["CallbackApiKey"])
+            {
+                return Unauthorized(new
+                {
+                    msbTrackingCode = (string?)null,
+                    code = "401",
+                    message = "UNAUTHORIZED",
+                    description = "X-MSB-Api-Key is invalid."
+                });
+            }
+
+            if (request == null ||
+                string.IsNullOrWhiteSpace(request.OrganId) ||
+                string.IsNullOrWhiteSpace(request.OwTrakingCode))
+            {
+                return BadRequest(new
+                {
+                    msbTrackingCode = (string?)null,
+                    code = "400",
+                    message = "INVALID_DATA",
+                    description = "organId and owTrakingCode are required."
+                });
+            }
+
+            _ = await _service.SaveRegistrationStatusCallbackAsync(request);
+
+            return Ok(new
+            {
+                msbTrackingCode = Guid.NewGuid().ToString("N"),
+                code = "200",
+                message = "OK",
+                description = "پردازش درخواست موفق"
+            });
+        }
     }
 }
-
