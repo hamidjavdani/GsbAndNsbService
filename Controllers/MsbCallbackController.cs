@@ -42,27 +42,32 @@ public class MsbCallbackController : ControllerBase
         }
 
         if (request.Code == 200 && request.Data is null)
+        {
             return BadRequest(CreateErrorAck("INVALID_DATA", "برای کد 200 فیلد data الزامی است."));
+        }
 
         if (request.Code == 201 && request.Error is null)
+        {
             return BadRequest(CreateErrorAck("INVALID_DATA", "برای کد 201 فیلد error الزامی است."));
+        }
 
         if (request.Code is not (200 or 201))
+        {
             return BadRequest(CreateErrorAck("INVALID_DATA", "مقدار code باید 200 یا 201 باشد."));
+        }
 
         var saved = await _service.SaveCallbackAsync(request);
 
-        if (!saved)
-            return StatusCode(500, CreateErrorAck("PROCESSING_ERROR", "ذخیره پاسخ ناموفق بود."));
-
-        return Ok(new MsbCallbackAckResponse
-        {
-            MsbTrackingCode = request.OwTrakingCode,
-            Code = "200",
-            Message = "OK",
-            Description = "پردازش درخواست موفق",
-            Timestamp = GetPersianTimestamp()
-        });
+        return !saved
+            ? StatusCode(500, CreateErrorAck("PROCESSING_ERROR", "ذخیره پاسخ ناموفق بود."))
+            : (IActionResult)Ok(new MsbCallbackAckResponse
+            {
+                MsbTrackingCode = request.OwTrakingCode,
+                Code = "200",
+                Message = "OK",
+                Description = "پردازش درخواست موفق",
+                Timestamp = GetPersianTimestamp()
+            });
     }
 
     private static MsbCallbackAckResponse CreateErrorAck(string message, string description) => new()
