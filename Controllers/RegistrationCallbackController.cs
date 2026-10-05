@@ -51,10 +51,13 @@ namespace GSB.Test.Api.Controllers
         public async Task<IActionResult> RegistrationResponse(
             [FromBody] RegistrationStatusCallbackRequest request)
         {
-            var apiKey = Request.Headers["X-MSB-Api-Key"].FirstOrDefault();
+            var headerName = _configuration["MSB:ApiKeyHeaderName"] ?? "X-MSB-Api-Key";
+            var apiKey = Request.Headers[headerName].FirstOrDefault();
+            var expectedApiKey = _configuration["MSB:ApiKey"];
 
             if (string.IsNullOrWhiteSpace(apiKey) ||
-                apiKey != _configuration["CallbackApiKey"])
+                string.IsNullOrWhiteSpace(expectedApiKey) ||
+                apiKey != expectedApiKey)
             {
                 return Unauthorized(new
                 {
