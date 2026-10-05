@@ -1,4 +1,4 @@
-﻿using GSB.Test.Api.Data;
+using GSB.Test.Api.Data;
 using GSB.Test.Api.Data.Entities;
 using GSB.Test.Api.Models.Callback;
 using System.Text.Json;
@@ -6,7 +6,7 @@ using System.Text.Json;
 namespace GSB.Test.Api.Services;
 
 /// <summary>
-/// سرویس دریافت Callback از پنجره واحد
+/// سرویس دریافت Callback از پنجره واحد / MSB
 /// </summary>
 public class RegistrationCallbackService : IRegistrationCallbackService
 {
@@ -18,7 +18,7 @@ public class RegistrationCallbackService : IRegistrationCallbackService
     }
 
     /// <summary>
-    /// ذخیره Callback دریافتی از پنجره واحد
+    /// ذخیره Callback اصالت سند دریافتی از پنجره واحد
     /// </summary>
     public async Task<bool> SaveCallbackAsync(RegistrationCallbackRequest request)
     {
@@ -35,7 +35,30 @@ public class RegistrationCallbackService : IRegistrationCallbackService
         };
 
         _context.SanadCallbacks.Add(entity);
+        _ = await _context.SaveChangesAsync();
 
+        return true;
+    }
+
+    /// <summary>
+    /// ذخیره پاسخ وضعیت ثبت ماده 14 دریافتی از MSB
+    /// </summary>
+    public async Task<bool> SaveRegistrationStatusCallbackAsync(
+        RegistrationStatusCallbackRequest request)
+    {
+        if (request == null)
+        {
+            return false;
+        }
+
+        var entity = new SanadCallback
+        {
+            Code = request.Result?.Code ?? 0,
+            RawJson = JsonSerializer.Serialize(request),
+            CreatedAt = DateTime.Now
+        };
+
+        _context.SanadCallbacks.Add(entity);
         _ = await _context.SaveChangesAsync();
 
         return true;
