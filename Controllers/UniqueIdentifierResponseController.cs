@@ -45,9 +45,9 @@ public class UniqueIdentifierResponseController : ControllerBase
 
     private IActionResult? ValidateApiKey()
     {
-        var headerName = _configuration["MSB:ApiKeyHeaderName"] ?? "X-MSB-Api-Key";
+        var headerName = _configuration["CallbackApiKeyHeaderName"] ?? "X-MSB-Api-Key";
         var apiKey = Request.Headers[headerName].FirstOrDefault();
-        var expectedApiKey = _configuration["MSB:ApiKey"];
+        var expectedApiKey = _configuration["CallbackApiKey"];
 
         return string.IsNullOrWhiteSpace(apiKey) ||
                string.IsNullOrWhiteSpace(expectedApiKey) ||
