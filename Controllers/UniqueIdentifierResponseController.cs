@@ -1,11 +1,10 @@
+using GSB.Test.Api.Models.Callback;
 using GSB.Test.Api.Services;
 using Microsoft.AspNetCore.Mvc;
-using System.Text;
 using System.Text.Json;
 
 namespace GSB.Test.Api.Controllers;
 
-[ApiController]
 public class UniqueIdentifierResponseController : ControllerBase
 {
     private readonly IRawMsbCallbackService _service;
@@ -20,68 +19,128 @@ public class UniqueIdentifierResponseController : ControllerBase
     }
 
     [HttpPost("/made14/send-unique-identifier-response/v1/create")]
-    public async Task<IActionResult> Create()
+    public async Task<IActionResult> Create([FromBody] UniqueIdentifierResponseRequest? request)
     {
-        var authError = ValidateApiKey();
-        if (authError is not null)
+        if (!ValidateApiKey())
         {
-            return authError;
+            return Unauthorized();
         }
 
-        var rawJson = await ReadAndValidateJsonAsync();
-        if (rawJson is null)
+        if (!ModelState.IsValid)
         {
-            return BadRequest(CreateAck(null, "400", "INVALID_DATA", "بدنه درخواست باید JSON معتبر باشد."));
+            return BadRequest(CreateResponse(
+                103,
+                "داده‌های ارسالی نامعتبر است"));
         }
 
+        if (request is null || HasMissingRequiredData(request))
+        {
+            return BadRequest(CreateResponse(
+                104,
+                "اطلاعات مورد نیاز کامل نیست"));
+        }
+
+        var rawJson = JsonSerializer.Serialize(request);
         var saved = await _service.SaveRawAsync(rawJson);
+
         if (!saved)
         {
-            return StatusCode(500, CreateAck(null, "500", "PROCESSING_ERROR", "ذخیره درخواست ناموفق بود."));
+            return StatusCode(500, CreateResponse(
+                107,
+                "خطای داخلی سرور"));
         }
 
-        return Ok(CreateAck(Guid.NewGuid().ToString("N"), "200", "OK", "پردازش درخواست موفق"));
+        return Ok(CreateResponse(
+            100,
+            "اطلاعات با موفقیت دریافت شد"));
     }
 
-    private IActionResult? ValidateApiKey()
+    private bool ValidateApiKey()
     {
         var headerName = _configuration["MSB:ApiKeyHeaderName"] ?? "X-MSB-Api-Key";
         var apiKey = Request.Headers[headerName].FirstOrDefault();
         var expectedApiKey = _configuration["MSB:ApiKey"];
 
-        return string.IsNullOrWhiteSpace(apiKey) ||
-               string.IsNullOrWhiteSpace(expectedApiKey) ||
-               apiKey != expectedApiKey
-            ? Unauthorized(CreateAck(null, "401", "UNAUTHORIZED", "X-MSB-Api-Key is invalid."))
-            : null;
+        return !string.IsNullOrWhiteSpace(apiKey) &&
+               !string.IsNullOrWhiteSpace(expectedApiKey) &&
+               apiKey == expectedApiKey;
     }
 
-    private async Task<string?> ReadAndValidateJsonAsync()
+    private static bool HasMissingRequiredData(UniqueIdentifierResponseRequest request)
     {
-        using var reader = new StreamReader(Request.Body, Encoding.UTF8);
-        var rawJson = await reader.ReadToEndAsync();
-
-        if (string.IsNullOrWhiteSpace(rawJson))
+        if (string.IsNullOrWhiteSpace(request.OrganId) ||
+            request.Data is null ||
+            string.IsNullOrWhiteSpace(request.MapConfirmationTrackingCode) ||
+            request.LandData is null ||
+            request.UserInfo is null)
         {
-            return null;
+            return true;
         }
 
-        try
+        var data = request.Data;
+        if (string.IsNullOrWhiteSpace(data.ActionId) ||
+            string.IsNullOrWhiteSpace(data.RuleId) ||
+            string.IsNullOrWhiteSpace(data.ActivityId) ||
+            string.IsNullOrWhiteSpace(data.RequestId) ||
+            string.IsNullOrWhiteSpace(data.Code) ||
+            string.IsNullOrWhiteSpace(data.Token) ||
+            string.IsNullOrWhiteSpace(data.TaskId))
         {
-            using var _ = JsonDocument.Parse(rawJson);
-            return rawJson;
+            return true;
         }
-        catch (JsonException)
+
+        foreach (var land in request.LandData)
         {
-            return null;
+            if (string.IsNullOrWhiteSpace(land.UniqueIdentifier) ||
+                string.IsNullOrWhiteSpace(land.UnitBlockNumber) ||
+                string.IsNullOrWhiteSpace(land.UnitNumber) ||
+                land.WarehouseNumberList is null ||
+                land.ParkingNumberList is null ||
+                land.OtherAttachmentsList is null)
+            {
+                return true;
+            }
+
+            foreach (var attachment in land.OtherAttachmentsList)
+            {
+                if (string.IsNullOrWhiteSpace(attachment.AttachmentsType) ||
+                    attachment.AttachmentsNumber is null)
+                {
+                    return true;
+                }
+            }
         }
+
+        foreach (var user in request.UserInfo)
+        {
+            if (string.IsNullOrWhiteSpace(user.Name) ||
+                string.IsNullOrWhiteSpace(user.Family) ||
+                string.IsNullOrWhiteSpace(user.UserType) ||
+                (string.IsNullOrWhiteSpace(user.NationalCode) &&
+                 string.IsNullOrWhiteSpace(user.NationalId)) ||
+                user.TotalShare is null ||
+                user.ShareOf is null ||
+                user.LandArseh is null ||
+                user.LandAyan is null)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
-    private static object CreateAck(string? trackingCode, string code, string message, string description) => new
+    private static UniqueIdentifierResponseEnvelope CreateResponse(
+        int code,
+        string message) => new()
     {
-        msbTrackingCode = trackingCode,
-        code,
-        message,
-        description
+        Status = new List<UniqueIdentifierResponseStatus>
+        {
+            new()
+            {
+                Code = code,
+                Message = message
+            }
+        }
     };
 }
