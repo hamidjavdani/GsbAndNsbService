@@ -5,13 +5,14 @@ using System.Text.Json;
 
 namespace GSB.Test.Api.Controllers;
 
+[ApiController]
 public class UniqueIdentifierResponseController : ControllerBase
 {
-    private readonly IRawMsbCallbackService _service;
+    private readonly IUniqueIdentifierCallbackService _service;
     private readonly IConfiguration _configuration;
 
     public UniqueIdentifierResponseController(
-        IRawMsbCallbackService service,
+        IUniqueIdentifierCallbackService service,
         IConfiguration configuration)
     {
         _service = service;
@@ -41,7 +42,7 @@ public class UniqueIdentifierResponseController : ControllerBase
         }
 
         var rawJson = JsonSerializer.Serialize(request);
-        var saved = await _service.SaveRawAsync(rawJson);
+        var saved = await _service.SaveAsync(request, rawJson);
 
         if (!saved)
         {
@@ -72,7 +73,9 @@ public class UniqueIdentifierResponseController : ControllerBase
             request.Data is null ||
             string.IsNullOrWhiteSpace(request.MapConfirmationTrackingCode) ||
             request.LandData is null ||
-            request.UserInfo is null)
+            request.LandData.Count == 0 ||
+            request.UserInfo is null ||
+            request.UserInfo.Count == 0)
         {
             return true;
         }
