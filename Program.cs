@@ -33,6 +33,7 @@ builder.Services.AddScoped<IRegistrationCallbackService, RegistrationCallbackSer
 builder.Services.AddScoped<IMsbCallbackService, MsbCallbackService>();
 builder.Services.AddScoped<IRawMsbCallbackService, RawMsbCallbackService>();
 builder.Services.AddScoped<IUniqueIdentifierCallbackService, UniqueIdentifierCallbackService>();
+builder.Services.AddScoped<IPoaEvaluationCallbackService, PoaEvaluationCallbackService>();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
