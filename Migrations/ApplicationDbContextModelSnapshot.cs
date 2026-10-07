@@ -89,6 +89,61 @@ namespace GSB.Test.Api.Migrations
 
                     b.ToTable("UniqueIdentifierCallbacks");
                 });
+
+            modelBuilder.Entity("PoaEvaluationCallback", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("AdvocacyEndDate")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Code")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("DocType")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("ErrorCode")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ErrorMessage")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool?>("ExistDoc")
+                        .HasColumnType("bit");
+
+                    b.Property<bool?>("HasPermission")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("NationalRegisterNo")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("OrganId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("OwTrakingCode")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("RawJson")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool?>("Succseed")
+                        .HasColumnType("bit");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("PoaEvaluationCallbacks");
+                });
 #pragma warning restore 612, 618
         }
     }
