@@ -11,11 +11,7 @@ public class ApplicationDbContext : DbContext
     {
     }
 
-    //public DbSet<RegistrationCallbackLog> RegistrationCallbackLogs
-    //{
-    //    get;
-    //    set;
-    //}
-
     public DbSet<SanadCallback> SanadCallbacks { get; set; }
+
+    public DbSet<UniqueIdentifierCallback> UniqueIdentifierCallbacks { get; set; }
 }
