@@ -27,34 +27,19 @@ namespace GSB.Test.Api.Migrations
 
             modelBuilder.Entity("SanadCallback", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
+                    b.Property<int>("Id").ValueGeneratedOnAdd().HasColumnType("int");
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("Code")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("RawJson")
-                        .HasColumnType("nvarchar(max)");
-
+                    b.Property<int>("Code").HasColumnType("int");
+                    b.Property<DateTime>("CreatedAt").HasColumnType("datetime2");
+                    b.Property<string>("RawJson").HasColumnType("nvarchar(max)");
                     b.HasKey("Id");
-
                     b.ToTable("SanadCallbacks");
                 });
 
             modelBuilder.Entity("UniqueIdentifierCallback", b =>
                 {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
-
+                    b.Property<long>("Id").ValueGeneratedOnAdd().HasColumnType("bigint");
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
-
                     b.Property<string>("ActionId").HasColumnType("nvarchar(max)");
                     b.Property<string>("ActivityId").HasColumnType("nvarchar(max)");
                     b.Property<DateTime>("CreatedAt").HasColumnType("datetime2");
@@ -65,33 +50,27 @@ namespace GSB.Test.Api.Migrations
                     b.Property<string>("RequestId").HasColumnType("nvarchar(max)");
                     b.Property<string>("RuleId").HasColumnType("nvarchar(max)");
                     b.Property<string>("TaskId").HasColumnType("nvarchar(max)");
-
                     b.HasKey("Id");
                     b.ToTable("UniqueIdentifierCallbacks");
                 });
 
             modelBuilder.Entity("PoaEvaluationCallback", b =>
                 {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
-
+                    b.Property<long>("Id").ValueGeneratedOnAdd().HasColumnType("bigint");
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
-
                     b.Property<string>("AdvocacyEndDate").HasColumnType("nvarchar(max)");
                     b.Property<int>("Code").HasColumnType("int");
                     b.Property<DateTime>("CreatedAt").HasColumnType("datetime2");
                     b.Property<string>("DocType").HasColumnType("nvarchar(max)");
-                    b.Property<int>("ErrorCode").HasColumnType("int");
+                    b.Property<int?>("ErrorCode").HasColumnType("int");
                     b.Property<string>("ErrorMessage").HasColumnType("nvarchar(max)");
-                    b.Property<bool>("ExistDoc").HasColumnType("bit");
-                    b.Property<bool>("HasPermission").HasColumnType("bit");
+                    b.Property<bool?>("ExistDoc").HasColumnType("bit");
+                    b.Property<bool?>("HasPermission").HasColumnType("bit");
                     b.Property<string>("NationalRegisterNo").HasColumnType("nvarchar(max)");
                     b.Property<string>("OrganId").IsRequired().HasColumnType("nvarchar(max)");
                     b.Property<string>("OwTrakingCode").IsRequired().HasColumnType("nvarchar(max)");
                     b.Property<string>("RawJson").IsRequired().HasColumnType("nvarchar(max)");
-                    b.Property<bool>("Succseed").HasColumnType("bit");
-
+                    b.Property<bool?>("Succseed").HasColumnType("bit");
                     b.HasKey("Id");
                     b.ToTable("PoaEvaluationCallbacks");
                 });
