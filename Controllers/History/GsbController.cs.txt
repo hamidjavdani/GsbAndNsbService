@@ -1,3 +1,8 @@
+ARCHIVED CONTROLLER SOURCE
+Original path: Controllers/GsbController.cs
+Reason: Controllers root cleaned to expose only official MSB callback endpoints.
+This file is intentionally .txt so ASP.NET does not compile or expose its old routes.
+
 ﻿using GSB.Test.Api.Models.Requests;
 using GSB.Test.Api.Services;
 using Microsoft.AspNetCore.Mvc;

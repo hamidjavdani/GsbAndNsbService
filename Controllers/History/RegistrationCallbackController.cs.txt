@@ -1,0 +1,100 @@
+ARCHIVED CONTROLLER SOURCE
+Original path: Controllers/RegistrationCallbackController.cs
+Reason: Controllers root cleaned to expose only official MSB callback endpoints.
+This file is intentionally .txt so ASP.NET does not compile or expose its old routes.
+
+using GSB.Test.Api.Models.Callback;
+using GSB.Test.Api.Services;
+using Microsoft.AspNetCore.Mvc;
+
+namespace GSB.Test.Api.Controllers
+{
+    [ApiController]
+    [Route("api/registration")]
+    public class RegistrationCallbackController : ControllerBase
+    {
+        private readonly IRegistrationCallbackService _service;
+        private readonly IConfiguration _configuration;
+
+        public RegistrationCallbackController(
+            IRegistrationCallbackService service,
+            IConfiguration configuration)
+        {
+            _service = service;
+            _configuration = configuration;
+        }
+
+        [HttpPost("document-inquiry-response")]
+        public async Task<IActionResult> DocumentInquiryResponse(
+            [FromBody] RegistrationCallbackRequest request)
+        {
+            var apiKey = Request.Headers["X-Api-Key"].FirstOrDefault();
+
+            if (string.IsNullOrWhiteSpace(apiKey) ||
+                apiKey != _configuration["CallbackApiKey"])
+            {
+                return Unauthorized(new
+                {
+                    code = 401,
+                    msg = "Unauthorized"
+                });
+            }
+
+            _ = await _service.SaveCallbackAsync(request);
+
+            return Ok(new
+            {
+                code = 200,
+                msg = "OK"
+            });
+        }
+
+        /// <summary>
+        /// دریافت پاسخ وضعیت ثبت در فرایند ماده 14 از MSB.
+        /// </summary>
+        [HttpPost("~/made-14/registration-response/v1/create")]
+        public async Task<IActionResult> RegistrationResponse(
+            [FromBody] RegistrationStatusCallbackRequest request)
+        {
+            var headerName = _configuration["MSB:ApiKeyHeaderName"] ?? "X-MSB-Api-Key";
+            var apiKey = Request.Headers[headerName].FirstOrDefault();
+            var expectedApiKey = _configuration["MSB:ApiKey"];
+
+            if (string.IsNullOrWhiteSpace(apiKey) ||
+                string.IsNullOrWhiteSpace(expectedApiKey) ||
+                apiKey != expectedApiKey)
+            {
+                return Unauthorized(new
+                {
+                    msbTrackingCode = (string?)null,
+                    code = "401",
+                    message = "UNAUTHORIZED",
+                    description = "X-MSB-Api-Key is invalid."
+                });
+            }
+
+            if (request == null ||
+                string.IsNullOrWhiteSpace(request.OrganId) ||
+                string.IsNullOrWhiteSpace(request.OwTrakingCode))
+            {
+                return BadRequest(new
+                {
+                    msbTrackingCode = (string?)null,
+                    code = "400",
+                    message = "INVALID_DATA",
+                    description = "organId and owTrakingCode are required."
+                });
+            }
+
+            _ = await _service.SaveRegistrationStatusCallbackAsync(request);
+
+            return Ok(new
+            {
+                msbTrackingCode = Guid.NewGuid().ToString("N"),
+                code = "200",
+                message = "OK",
+                description = "پردازش درخواست موفق"
+            });
+        }
+    }
+}
