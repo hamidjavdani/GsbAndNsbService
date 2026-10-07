@@ -14,4 +14,6 @@ public class ApplicationDbContext : DbContext
     public DbSet<SanadCallback> SanadCallbacks { get; set; }
 
     public DbSet<UniqueIdentifierCallback> UniqueIdentifierCallbacks { get; set; }
+
+    public DbSet<PoaEvaluationCallback> PoaEvaluationCallbacks { get; set; }
 }
