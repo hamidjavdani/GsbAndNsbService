@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - feature/msb-registration-response-callback
+      - feature/exchange-inbound-document-ownership-verification
   workflow_dispatch:
 
 jobs:
