@@ -35,31 +35,6 @@ public class MsbService : IMsbService
         _httpContextAccessor = httpContextAccessor;
     }
 
-    public async Task<G2GInquiryResponse> G2GInquiryAsync(G2GInquiryRequest request)
-    {
-        if (string.IsNullOrWhiteSpace(request.RuleId))
-            request.RuleId = _settings.RuleId;
-
-        var json = JsonSerializer.Serialize(request, _jsonOptions);
-        var url = $"{_settings.BaseUrl.TrimEnd('/')}/{_settings.InquiryEndpoint.TrimStart('/')}";
-
-        using var message = new HttpRequestMessage(HttpMethod.Post, url)
-        {
-            Content = new StringContent(json, Encoding.UTF8, "application/json")
-        };
-
-        message.Headers.Add(_settings.ApiKeyHeaderName, _settings.ApiKey);
-
-        using var response = await _httpClient.SendAsync(message);
-        var responseContent = await response.Content.ReadAsStringAsync();
-
-        if (!response.IsSuccessStatusCode)
-            throw new HttpRequestException($"MSB HTTP {(int)response.StatusCode}: {responseContent}");
-
-        return JsonSerializer.Deserialize<G2GInquiryResponse>(responseContent, _jsonOptions)
-            ?? new G2GInquiryResponse { Code = -1, Msg = "Response is null." };
-    }
-
     public async Task<Made14CancellationResponse> CancelMade14Async(
         Made14CancellationRequest request)
     {
