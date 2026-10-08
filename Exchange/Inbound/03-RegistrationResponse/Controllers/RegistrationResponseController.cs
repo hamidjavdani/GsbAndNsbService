@@ -37,11 +37,15 @@ public class RegistrationResponseController : ControllerBase
 
         if (request == null ||
             string.IsNullOrWhiteSpace(request.OrganId) ||
-            string.IsNullOrWhiteSpace(request.OwTrakingCode))
+            string.IsNullOrWhiteSpace(request.OwTrakingCode) ||
+            request.Status is null ||
+            request.Result is null ||
+            request.Result.Code is null ||
+            string.IsNullOrWhiteSpace(request.Result.Message))
         {
             return BadRequest(CreateErrorAck(
                 "INVALID_DATA",
-                "organId and owTrakingCode are required."));
+                "organId, owTrakingCode, status, result.code and result.msg are required."));
         }
 
         var saved = await _service.SaveRegistrationStatusCallbackAsync(request);
