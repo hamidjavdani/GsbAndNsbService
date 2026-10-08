@@ -17,16 +17,16 @@ public class RegistrationStatusCallbackRequest
     public string? SabtTrackingCode { get; set; }
 
     [JsonPropertyName("status")]
-    public int Status { get; set; }
+    public int? Status { get; set; }
 
     [JsonPropertyName("result")]
-    public RegistrationStatusResult Result { get; set; } = new();
+    public RegistrationStatusResult? Result { get; set; }
 }
 
 public class RegistrationStatusResult
 {
     [JsonPropertyName("code")]
-    public int Code { get; set; }
+    public int? Code { get; set; }
 
     [JsonPropertyName("msg")]
     public string? Message { get; set; }
