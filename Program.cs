@@ -31,6 +31,7 @@ builder.Services.AddHttpClient("MSB", client =>
 builder.Services.AddScoped<IGsbService, GsbService>();
 builder.Services.AddScoped<IMsbService, MsbService>();
 builder.Services.AddScoped<IDocumentVerificationService, DocumentVerificationService>();
+builder.Services.AddScoped<IPoaInquiryService, PoaInquiryService>();
 builder.Services.AddScoped<IRegistrationCallbackService, RegistrationCallbackService>();
 builder.Services.AddScoped<IMsbCallbackService, MsbCallbackService>();
 builder.Services.AddScoped<IRawMsbCallbackService, RawMsbCallbackService>();
