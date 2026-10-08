@@ -2,6 +2,7 @@ using GSB.Test.Api.Configurations;
 using GSB.Test.Api.Data;
 using GSB.Test.Api.Services;
 using Microsoft.EntityFrameworkCore;
+using GSB.Test.Api.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -34,6 +35,8 @@ builder.Services.AddScoped<IMsbCallbackService, MsbCallbackService>();
 builder.Services.AddScoped<IRawMsbCallbackService, RawMsbCallbackService>();
 builder.Services.AddScoped<IUniqueIdentifierCallbackService, UniqueIdentifierCallbackService>();
 builder.Services.AddScoped<IPoaEvaluationCallbackService, PoaEvaluationCallbackService>();
+builder.Services.AddScoped<IMsbInvocationLogger, MsbInvocationLogger>();
+builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -54,5 +57,6 @@ var app = builder.Build();
 
 app.UseHttpsRedirection();
 app.UseAuthorization();
+app.UseMiddleware<MsbInvocationLoggingMiddleware>();
 app.MapControllers();
 app.Run();

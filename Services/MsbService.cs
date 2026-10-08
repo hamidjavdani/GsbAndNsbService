@@ -4,6 +4,8 @@ using GSB.Test.Api.Models.Responses;
 using Microsoft.Extensions.Options;
 using System.Text;
 using System.Text.Json;
+using System.Diagnostics;
+using GSB.Test.Api.Data.Entities;
 
 namespace GSB.Test.Api.Services;
 
@@ -11,16 +13,26 @@ public class MsbService : IMsbService
 {
     private readonly HttpClient _httpClient;
     private readonly MsbSettings _settings;
+    private readonly IMsbInvocationLogger _invocationLogger;
+    private readonly ILogger<MsbService> _diagnostics;
+    private readonly IConfiguration _configuration;
+    private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly JsonSerializerOptions _jsonOptions = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
         PropertyNameCaseInsensitive = true
     };
 
-    public MsbService(IHttpClientFactory httpClientFactory, IOptions<MsbSettings> options)
+    public MsbService(IHttpClientFactory httpClientFactory, IOptions<MsbSettings> options,
+        IMsbInvocationLogger invocationLogger, ILogger<MsbService> diagnostics,
+        IConfiguration configuration, IHttpContextAccessor httpContextAccessor)
     {
         _httpClient = httpClientFactory.CreateClient("MSB");
         _settings = options.Value;
+        _invocationLogger = invocationLogger;
+        _diagnostics = diagnostics;
+        _configuration = configuration;
+        _httpContextAccessor = httpContextAccessor;
     }
 
     public async Task<G2GInquiryResponse> G2GInquiryAsync(G2GInquiryRequest request)
@@ -65,21 +77,69 @@ public class MsbService : IMsbService
 
         message.Headers.Add(_settings.ApiKeyHeaderName, _settings.ApiKey);
 
-        using var response = await _httpClient.SendAsync(message);
-        var responseContent = await response.Content.ReadAsStringAsync();
+        var stopwatch = Stopwatch.StartNew();
+        var id = Guid.Empty;
+        InvocationLogSanitizer? sanitizer = null;
+        try
+        {
+            sanitizer = new InvocationLogSanitizer(_configuration, _settings.ApiKey);
+            var maskedRequest = sanitizer.Body(json);
+            var context = _httpContextAccessor.HttpContext;
+            var target = new UriBuilder(url) { UserName = "", Password = "", Query = "", Fragment = "" };
+            var log = new MsbInvocationLog
+            {
+                Direction = "Outbound", ServiceName = "Made14Cancellation",
+                Endpoint = sanitizer.Text(target.Uri.GetLeftPart(UriPartial.Path))!,
+                HttpMethod = "POST", ReceivedAt = DateTime.UtcNow, CreatedAt = DateTime.UtcNow,
+                Host = sanitizer.Text(target.Host), ContentType = "application/json",
+                ContentLength = Encoding.UTF8.GetByteCount(json),
+                TraceIdentifier = sanitizer.Text(context?.TraceIdentifier, 256),
+                CorrelationId = sanitizer.Text(context?.Request.Headers["X-Correlation-ID"].FirstOrDefault())
+            };
+            InvocationLogData.Request(log, maskedRequest);
+            id = await SafeInvocationLogging.BeginAsync(_invocationLogger, log, _diagnostics);
+        }
+        catch (Exception ex)
+        {
+            _diagnostics.LogWarning("Outbound invocation capture failed ({ErrorType}).", ex.GetType().Name);
+        }
 
-        if (!response.IsSuccessStatusCode)
-            throw new HttpRequestException(
-                $"MSB cancellation HTTP {(int)response.StatusCode}: {responseContent}");
+        int? httpStatus = null;
+        string? responseContent = null;
+        Exception? failure = null;
+        try
+        {
+            using var response = await _httpClient.SendAsync(message);
+            httpStatus = (int)response.StatusCode;
+            responseContent = await response.Content.ReadAsStringAsync();
 
-        return JsonSerializer.Deserialize<Made14CancellationResponse>(
-                   responseContent,
-                   _jsonOptions)
-               ?? new Made14CancellationResponse
-               {
-                   Code = -1,
-                   Msg = "Response is null."
-               };
+            if (!response.IsSuccessStatusCode)
+                throw new HttpRequestException(
+                    $"MSB cancellation HTTP {(int)response.StatusCode}: {responseContent}");
+
+            return JsonSerializer.Deserialize<Made14CancellationResponse>(
+                       responseContent,
+                       _jsonOptions)
+                   ?? new Made14CancellationResponse
+                   {
+                       Code = -1,
+                       Msg = "Response is null."
+                   };
+        }
+        catch (Exception ex) { failure = ex; throw; }
+        finally
+        {
+            try
+            {
+                var completion = InvocationLogData.Completion(stopwatch.ElapsedMilliseconds,
+                    httpStatus, sanitizer?.Body(responseContent), failure);
+                await SafeInvocationLogging.CompleteAsync(_invocationLogger, id, completion, _diagnostics);
+            }
+            catch (Exception ex)
+            {
+                _diagnostics.LogWarning("Outbound invocation completion failed ({ErrorType}).", ex.GetType().Name);
+            }
+        }
     }
 
     private static void ValidateCancellationRequest(
