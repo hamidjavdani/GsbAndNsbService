@@ -31,8 +31,8 @@ jobs:
         run: |
           $env:ASPNETCORE_URLS = "http://127.0.0.1:5055"
           $env:UseInMemoryDatabase = "true"
-          $env:CallbackApiKey = "test-msb-key"
-          Start-Process dotnet -ArgumentList "run --project .\GSB.Test.Api.csproj --configuration Release --no-build" -RedirectStandardOutput api.out.log -RedirectStandardError api.err.log
+          $env:MSB__ApiKey = "test-msb-key"
+          Start-Process dotnet -ArgumentList "run --project .\GSB.Test.Api.csproj --configuration Release --no-build --no-launch-profile" -RedirectStandardOutput api.out.log -RedirectStandardError api.err.log
           for ($i = 0; $i -lt 30; $i++) {
             try {
               Invoke-WebRequest -Uri "http://127.0.0.1:5055" -UseBasicParsing -TimeoutSec 2 | Out-Null
