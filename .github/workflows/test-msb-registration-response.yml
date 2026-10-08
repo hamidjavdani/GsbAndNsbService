@@ -60,18 +60,16 @@ jobs:
               "Content-Type" = "application/json"
             }
 
-            $body = @'
-            {
-              "organId": "14002861227",
-              "status": 2,
-              "owTrakingCode": "80000023800360",
-              "sabtTrackingCode": "TEST-SABT-001",
-              "result": {
-                "code": 200,
-                "msg": "TEST OK"
+            $body = @{
+              organId = "14002861227"
+              status = 2
+              owTrakingCode = "80000023800360"
+              sabtTrackingCode = "TEST-SABT-001"
+              result = @{
+                code = 200
+                msg = "TEST OK"
               }
-            }
-            '@
+            } | ConvertTo-Json -Depth 5
 
             $response = Invoke-RestMethod -Method Post -Uri "http://127.0.0.1:5055/made-14/registration-response/v1/create" -Headers $headers -Body $body
 
