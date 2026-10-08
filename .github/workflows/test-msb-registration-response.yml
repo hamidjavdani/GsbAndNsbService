@@ -26,57 +26,69 @@ jobs:
       - name: Build
         run: dotnet build .\GSB.Test.Api.csproj --configuration Release --no-restore
 
-      - name: Start API
+      - name: Start API and call official MSB callback route
         shell: powershell
         run: |
           $env:ASPNETCORE_URLS = "http://127.0.0.1:5055"
           $env:UseInMemoryDatabase = "true"
           $env:MSB__ApiKey = "test-msb-key"
-          Start-Process dotnet -ArgumentList "run --project .\GSB.Test.Api.csproj --configuration Release --no-build --no-launch-profile" -RedirectStandardOutput api.out.log -RedirectStandardError api.err.log
-          for ($i = 0; $i -lt 30; $i++) {
-            try {
-              Invoke-WebRequest -Uri "http://127.0.0.1:5055" -UseBasicParsing -TimeoutSec 2 | Out-Null
-            } catch {
-              if ($_.Exception.Response) { break }
+
+          $process = Start-Process dotnet -ArgumentList "run --project .\GSB.Test.Api.csproj --configuration Release --no-build --no-launch-profile" -RedirectStandardOutput api.out.log -RedirectStandardError api.err.log -PassThru
+
+          try {
+            $ready = $false
+            for ($i = 0; $i -lt 30; $i++) {
+              try {
+                Invoke-WebRequest -Uri "http://127.0.0.1:5055" -UseBasicParsing -TimeoutSec 2 | Out-Null
+                $ready = $true
+                break
+              } catch {
+                if ($_.Exception.Response) {
+                  $ready = $true
+                  break
+                }
+              }
+              Start-Sleep -Seconds 1
             }
-            Start-Sleep -Seconds 1
-          }
 
-      - name: Call official MSB callback route
-        shell: powershell
-        run: |
-          $headers = @{
-            "X-MSB-Api-Key" = "test-msb-key"
-            "Content-Type" = "application/json"
-          }
+            if (-not $ready) {
+              throw "API did not become ready on http://127.0.0.1:5055"
+            }
 
-          $body = @'
-          {
-            "organId": "14002861227",
-            "status": 2,
-            "owTrakingCode": "80000023800360",
-            "sabtTrackingCode": "TEST-SABT-001",
-            "result": {
-              "code": 200,
-              "msg": "TEST OK"
+            $headers = @{
+              "X-MSB-Api-Key" = "test-msb-key"
+              "Content-Type" = "application/json"
+            }
+
+            $body = @'
+            {
+              "organId": "14002861227",
+              "status": 2,
+              "owTrakingCode": "80000023800360",
+              "sabtTrackingCode": "TEST-SABT-001",
+              "result": {
+                "code": 200,
+                "msg": "TEST OK"
+              }
+            }
+            '@
+
+            $response = Invoke-RestMethod -Method Post -Uri "http://127.0.0.1:5055/made-14/registration-response/v1/create" -Headers $headers -Body $body
+
+            $response | ConvertTo-Json -Depth 10
+
+            if ($response.code -ne "200") {
+              throw "Expected code 200 but got $($response.code)"
+            }
+
+            if ($response.message -ne "OK") {
+              throw "Expected message OK but got $($response.message)"
             }
           }
-          '@
-
-          $response = Invoke-RestMethod `
-            -Method Post `
-            -Uri "http://127.0.0.1:5055/made-14/registration-response/v1/create" `
-            -Headers $headers `
-            -Body $body
-
-          $response | ConvertTo-Json -Depth 10
-
-          if ($response.code -ne "200") {
-            throw "Expected code 200 but got $($response.code)"
-          }
-
-          if ($response.message -ne "OK") {
-            throw "Expected message OK but got $($response.message)"
+          finally {
+            if ($process -and -not $process.HasExited) {
+              Stop-Process -Id $process.Id -Force
+            }
           }
 
       - name: Show API logs on failure
