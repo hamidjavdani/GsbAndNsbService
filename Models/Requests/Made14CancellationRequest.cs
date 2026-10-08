@@ -32,8 +32,8 @@ public class Made14CancellationData
 public static class Made14CancellationRuleIds
 {
     // پرونده هنوز از سازمان ثبت کد رهگیری دریافت نکرده است.
-    public const string WithoutRegistrationTrackingCode = "mo6mgrjz";
+    public const string WithoutRegistrationTrackingCode = "mgrjz6mo";
 
     // پرونده از سازمان ثبت کد رهگیری دریافت کرده است.
-    public const string WithRegistrationTrackingCode = "bnhz2mgw";
+    public const string WithRegistrationTrackingCode = "mgw2bnhz";
 }
