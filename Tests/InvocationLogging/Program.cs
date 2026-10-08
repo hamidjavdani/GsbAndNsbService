@@ -126,6 +126,32 @@ var badJson = await Send(poaPath, "{\"token\":\"TEST-MALFORMED-SECRET");
 Check(badJson.StatusCode == HttpStatusCode.BadRequest && !(await Logs()).Last().RequestBodyMasked!.Contains("TEST-MALFORMED-SECRET"),
     "Malformed JSON does not leak secrets");
 
+// Required fields listed in the registration PDF must fail before business persistence.
+foreach (var field in new[] { "organId", "owTrakingCode", "status", "result", "result.code", "result.msg" })
+{
+    var body = System.Text.Json.Nodes.JsonNode.Parse(regBody)!.AsObject();
+    var parts = field.Split('.');
+    if (parts.Length == 1) body.Remove(field);
+    else body[parts[0]]!.AsObject().Remove(parts[1]);
+    var invalid = await Send(regPath, body.ToJsonString());
+    Check(invalid.StatusCode == HttpStatusCode.BadRequest, "Registration required PDF field rejected");
+}
+
+// Unique-identifier behavior remains limited to specified required fields, not inferred business rules.
+foreach (var field in new[] { "usertype", "nationalCode", "name", "family", "totalShare", "shareOf", "landArseh", "landAyan" })
+{
+    var body = System.Text.Json.Nodes.JsonNode.Parse(uniqueBody)!;
+    body["userInfo"]![0]!.AsObject().Remove(field);
+    var invalid = await Send(uniquePath, body.ToJsonString());
+    using var ack = JsonDocument.Parse(await invalid.Content.ReadAsStringAsync());
+    Check(invalid.StatusCode == HttpStatusCode.BadRequest && ack.RootElement.GetProperty("status")[0].GetProperty("code").GetInt32() == 104,
+        "Unique required user field yields 104");
+}
+var missingAttachment = System.Text.Json.Nodes.JsonNode.Parse(uniqueBody)!;
+missingAttachment["landData"]![0]!["otherAttachmentsList"] = System.Text.Json.Nodes.JsonNode.Parse("[{\"attachmentsType\":\"TEST\"}]");
+Check((await Send(uniquePath, missingAttachment.ToJsonString())).StatusCode == HttpStatusCode.BadRequest,
+    "Unique attachment number required");
+
 // Both database failures and a throwing custom logger must leave business responses intact.
 foreach (var mode in new[] { "persist", "begin", "complete" })
 {
@@ -176,9 +202,9 @@ var outbound = new MockMsb();
 var options = Options.Create(new MsbSettings { BaseUrl = "http://127.0.0.1:1", ApiKeyHeaderName = "msb-identifier", ApiKey = "TEST-API-KEY" });
 using var outboundScope = app.Services.CreateScope();
 var outboundLogger = outboundScope.ServiceProvider.GetRequiredService<IMsbInvocationLogger>();
-var msb = new MsbService(new Factory(new HttpClient(outbound)), options, outboundLogger,
-    NullLogger<MsbService>.Instance, configuration, new HttpContextAccessor());
-foreach (var rule in new[] { "mo6mgrjz", "bnhz2mgw" })
+var msb = new Made14CancellationService(new Factory(new HttpClient(outbound)), options, outboundLogger,
+    NullLogger<Made14CancellationService>.Instance, configuration, new HttpContextAccessor());
+foreach (var rule in new[] { "mgrjz6mo", "mgw2bnhz" })
 {
     var response = await msb.CancelMade14Async(Cancel(rule));
     Check(response.Code == 200 && response.Msg == "TEST OK", "Cancellation contract preserved");
@@ -194,7 +220,7 @@ Check(outbound.Calls == calls, "Invalid rule never sent");
 foreach (var mode in new[] { "http", "network", "json" })
 {
     outbound.Mode = mode;
-    try { await msb.CancelMade14Async(Cancel("mo6mgrjz")); throw new Exception("Expected original exception"); }
+    try { await msb.CancelMade14Async(Cancel("mgrjz6mo")); throw new Exception("Expected original exception"); }
     catch (Exception ex) when (ex is HttpRequestException or JsonException) { }
     var log = (await Logs()).Last();
     Check(!log.IsSuccess && log.ErrorType is not null && log.CompletedAt.HasValue, "Outbound exceptions recorded");
@@ -206,12 +232,13 @@ foreach (var mode in new[] { "persist", "begin", "complete" })
     persistence.Fail = mode == "persist";
     replacement.FailBegin = mode == "begin";
     replacement.FailComplete = mode == "complete";
-    Check((await msb.CancelMade14Async(Cancel("mo6mgrjz"))).Code == 200, "Outbound tolerates " + mode + " failure");
+    Check((await msb.CancelMade14Async(Cancel("mgrjz6mo"))).Code == 200, "Outbound tolerates " + mode + " failure");
 }
 persistence.Fail = replacement.FailBegin = replacement.FailComplete = false;
 Check(!string.Join("\n", diagnostics.Messages).Contains("TEST-OUTBOUND-SECRET"), "Internal diagnostic secrecy");
+await ExchangeAuditTests.RunAsync(app.Services, configuration);
 await app.StopAsync();
-Console.WriteLine($"PASS: masking, four callback contracts/auth/storage, begin/complete, validation, logging failures, outbound mock success/errors. Assertions={TestState.Assertions}; external MSB calls=0; SQL writes=0.");
+Console.WriteLine($"PASS: all eight Exchange services, PDF validation, sanitized logs, four callback contracts/auth/storage, outbound fake success/errors and logging failures. Assertions={TestState.Assertions}; external MSB calls=0; SQL writes=0.");
 
 async Task<HttpResponseMessage> Send(string path, string body, bool authorized = true)
 {

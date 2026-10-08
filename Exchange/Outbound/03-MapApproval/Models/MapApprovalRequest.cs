@@ -22,9 +22,9 @@ public class MapApprovalRequest
     [JsonPropertyName("Secondary")] public string Secondary { get; set; } = string.Empty;
     [JsonPropertyName("JamCode")] public string JamCode { get; set; } = string.Empty;
     [JsonPropertyName("Address")] public string Address { get; set; } = string.Empty;
-    [JsonPropertyName("Area")] public decimal Area { get; set; }
+    [JsonPropertyName("Area")] public decimal? Area { get; set; }
     [JsonPropertyName("PostalCode")] public string? PostalCode { get; set; }
-    [JsonPropertyName("TotalBlockNo")] public int TotalBlockNo { get; set; }
+    [JsonPropertyName("TotalBlockNo")] public int? TotalBlockNo { get; set; }
     [JsonPropertyName("Block")] public List<MapApprovalBlock> Blocks { get; set; } = new();
     [JsonPropertyName("OwnersInfo")] public List<MapApprovalOwner> OwnersInfo { get; set; } = new();
     [JsonPropertyName("MainPlan")] public MapApprovalPlan? MainPlan { get; set; }
@@ -33,7 +33,7 @@ public class MapApprovalRequest
 
 public class MapApprovalBlock
 {
-    [JsonPropertyName("BlockNo")] public int BlockNo { get; set; }
+    [JsonPropertyName("BlockNo")] public int? BlockNo { get; set; }
     [JsonPropertyName("BlockName")] public string? BlockName { get; set; }
     [JsonPropertyName("StructureType")] public int StructureType { get; set; }
     [JsonPropertyName("Limitation")] public string Limitation { get; set; } = string.Empty;
@@ -42,9 +42,9 @@ public class MapApprovalBlock
 
 public class MapApprovalClass
 {
-    [JsonPropertyName("ClassNo")] public int ClassNo { get; set; }
-    [JsonPropertyName("ClassUnitNo")] public int ClassUnitNo { get; set; }
-    [JsonPropertyName("ClassArea")] public decimal ClassArea { get; set; }
+    [JsonPropertyName("ClassNo")] public int? ClassNo { get; set; }
+    [JsonPropertyName("ClassUnitNo")] public int? ClassUnitNo { get; set; }
+    [JsonPropertyName("ClassArea")] public decimal? ClassArea { get; set; }
     [JsonPropertyName("EstateUnits")] public List<MapApprovalEstateUnit> EstateUnits { get; set; } = new();
     [JsonPropertyName("Joint")] public List<MapApprovalJoint> Joints { get; set; } = new();
 }
@@ -61,7 +61,7 @@ public class MapApprovalJoint
 {
     [JsonPropertyName("BlockNo")] public int? BlockNo { get; set; }
     [JsonPropertyName("Code")] public string Code { get; set; } = string.Empty;
-    [JsonPropertyName("Area")] public decimal Area { get; set; }
+    [JsonPropertyName("Area")] public decimal? Area { get; set; }
     [JsonPropertyName("Usage")] public string Usage { get; set; } = string.Empty;
     [JsonPropertyName("Sector")] public string Sector { get; set; } = string.Empty;
     [JsonPropertyName("Limitation")] public string Limitation { get; set; } = string.Empty;

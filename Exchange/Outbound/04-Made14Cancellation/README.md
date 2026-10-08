@@ -43,6 +43,6 @@ Response (p. 6): integer `code` and string `msg`. Examples show `200`/`"OK"` for
 
 Implementation requires final verification
 
-The model constants match the official rule IDs and the service rejects other rules before sending. `noToken` defaults to true but false is not rejected. The PDF's curl content type conflicts with its header table; the implementation follows the table. Its sample also has malformed JSON punctuation, so it should not be copied as executable input.
+The model constants match the official rule IDs and the service rejects other rules and `noToken = false` before sending. The PDF's curl content type conflicts with its header table; the implementation follows the table. Its sample also has malformed JSON punctuation, so it should not be copied as executable input.
 
-The checked-in invocation regression suite instantiates legacy `MsbService` with `mo6mgrjz`/`bnhz2mgw`, not the official values in the current models. Earlier local PASS results therefore do not establish final verification of the registered service with the current official rules. Verify those rules, noToken behavior and the configured header separately; this documentation change does not modify code or tests.
+The invocation regression suite now exercises the registered `Made14CancellationService` with both official rule IDs, invalid rules, `noToken = false`, sanitized persistence and failure handling through fake HTTP handlers. Earlier results using different rule IDs are superseded. HTTP failure exceptions omit raw response details. Confirm the configured header and the PDF's conflicting curl media type with MSB; local tests do not establish external acceptance.

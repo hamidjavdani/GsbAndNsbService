@@ -34,8 +34,8 @@ Response fields, success/error codes and response examples: Not specified in off
 - Service: [MapApprovalService](Services/MapApprovalService.cs), `IMapApprovalService.SendAsync`.
 - Request/Response Models: [MapApprovalRequest](Models/MapApprovalRequest.cs) and nested block/class/unit/joint/owner/plan models; response is `JsonElement`, with no typed response model.
 - Config keys: `MSB:BaseUrl`, `MSB:MapApprovalEndpoint`, `MSB:ApiKeyHeaderName`, `MSB:ApiKey`.
-- Database persistence: none in this service.
-- Invocation logging status: no outbound invocation logging in `MapApprovalService`.
+- Database persistence: no business record; sanitized invocation records use `MsbInvocationLogs`.
+- Invocation logging status: shared `MsbOutboundInvocation` captures `MapApproval` begin/completion. Owner subtrees, identity/contact/address fields, file/base64 payloads and geometry are masked; the wire payload is unchanged.
 
 ## Official Documentation
 
@@ -45,4 +45,6 @@ Response fields, success/error codes and response examples: Not specified in off
 
 Implementation requires final verification
 
-The service rejects `elzam14 = false` but does not validate the remaining documented field lengths, enumerations or CRS; geometry is passed through as `JsonElement` without CRS transformation. The PDF table spells `ActionRefrenceNo` and unit `Limitaion`, while the sample and models use `ActionReferenceNo` and `Limitation`. Geometry examples include both FeatureCollection and direct Polygon forms, and unit-plan identifiers appear as strings in the sample but numbers in the table/models. Confirm the accepted representation and runtime header before final verification; no response schema is invented.
+Validation rejects `elzam14 = false`, missing required top-level strings/numbers, documented length/enumeration violations, invalid supplied nested required fields and missing conditional personal-owner fields. Required numeric fields with unambiguous types are nullable internally to distinguish omission from a valid zero; no undocumented positive-only restriction or minimum array size is added. Plan media types and the documented contact number format are checked.
+
+The PDF table spells `ActionRefrenceNo` and unit `Limitaion`, while the sample and models use `ActionReferenceNo` and `Limitation`. Geometry examples include both FeatureCollection and direct Polygon forms, and unit-plan identifiers appear as strings in the sample but numbers in the table/models. Those contracts remain unchanged pending MSB confirmation; geometry is passed through without transformation or inferred CRS validation. The external CRS requirement remains `EPSG:4326`. Fake-handler tests verify validation and log privacy, not MSB acceptance. Confirm the representation and runtime header; no response schema is invented.

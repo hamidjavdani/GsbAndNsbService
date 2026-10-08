@@ -2,14 +2,13 @@ using GSB.Test.Api.Configurations;
 using GSB.Test.Api.Models.Requests;
 using GSB.Test.Api.Models.Responses;
 using Microsoft.Extensions.Options;
-using System.Text;
 using System.Text.Json;
 
 namespace GSB.Test.Api.Services;
 
 public class PoaInquiryService : IPoaInquiryService
 {
-    private readonly HttpClient _httpClient;
+    private readonly MsbOutboundInvocation _outbound;
     private readonly MsbSettings _settings;
     private readonly JsonSerializerOptions _jsonOptions = new()
     {
@@ -19,43 +18,38 @@ public class PoaInquiryService : IPoaInquiryService
 
     public PoaInquiryService(
         IHttpClientFactory httpClientFactory,
-        IOptions<MsbSettings> options)
+        IOptions<MsbSettings> options,
+        IMsbInvocationLogger invocationLogger, ILogger<PoaInquiryService> diagnostics,
+        IConfiguration configuration, IHttpContextAccessor httpContextAccessor)
     {
-        _httpClient = httpClientFactory.CreateClient("MSB");
         _settings = options.Value;
+        _outbound = new MsbOutboundInvocation(httpClientFactory.CreateClient("MSB"), _settings,
+            invocationLogger, diagnostics, configuration, httpContextAccessor);
     }
 
     public async Task<PoaInquiryResponse> SendAsync(PoaInquiryRequest request)
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        if (string.IsNullOrWhiteSpace(request.RuleId))
-            request.RuleId = _settings.PoaInquiryRuleId;
+        MsbRequestValidation.Required(request.NationalRegisterNo, "nationalRegisterNo");
+        MsbRequestValidation.Required(request.SecretNo, "secretNo");
+        MsbRequestValidation.Required(request.RequesterName, "requesterName");
+        MsbRequestValidation.Required(request.RequesterFamily, "requesterFamily");
+        MsbRequestValidation.Required(request.RequesterNationalCode, "requesterNationalCode");
+        MsbRequestValidation.Required(request.RequesterOfficProvinceName, "requesterOfficProvinceName");
+        MsbRequestValidation.Required(request.RequesterOfficeCode, "requesterOfficeCode");
+        MsbRequestValidation.Required(request.RequesterOfficNumber, "requesterOfficNumber");
+        MsbRequestValidation.Required(request.RequestUniqueId, "requestUniqueId");
+        request.RuleId = MsbRequestValidation.Rule(request.RuleId, "mhlu20po");
 
         var json = JsonSerializer.Serialize(request, _jsonOptions);
-        var url = $"{_settings.BaseUrl.TrimEnd('/')}/{_settings.PoaInquiryEndpoint.TrimStart('/')}";
-
-        using var message = new HttpRequestMessage(HttpMethod.Post, url)
-        {
-            Content = new StringContent(json, Encoding.UTF8, "application/json")
-        };
-
-        message.Headers.Add(_settings.ApiKeyHeaderName, _settings.ApiKey);
-
-        using var response = await _httpClient.SendAsync(message);
-        var responseContent = await response.Content.ReadAsStringAsync();
-
-        if (!response.IsSuccessStatusCode)
-            throw new HttpRequestException(
-                $"MSB POA HTTP {(int)response.StatusCode}: {responseContent}");
-
-        return JsonSerializer.Deserialize<PoaInquiryResponse>(
-                   responseContent,
+        return await _outbound.SendAsync("PoaInquiry", _settings.PoaInquiryEndpoint, json,
+            responseContent => JsonSerializer.Deserialize<PoaInquiryResponse>(responseContent,
                    _jsonOptions)
                ?? new PoaInquiryResponse
                {
                    Code = -1,
                    Msg = "Response is null."
-               };
+               });
     }
 }

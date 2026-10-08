@@ -29,9 +29,9 @@ Response (p. 5): integer `code`, string `msg`, and string `owTrakingCode` on suc
 - Controller: none active for this service.
 - Service: [PoaInquiryService](Services/PoaInquiryService.cs), `IPoaInquiryService.SendAsync`.
 - Request/Response Models: [PoaInquiryRequest](Models/PoaInquiryRequest.cs), [PoaInquiryResponse](Models/PoaInquiryResponse.cs).
-- Config keys: `MSB:BaseUrl`, `MSB:PoaInquiryEndpoint`, `MSB:PoaInquiryRuleId`, `MSB:ApiKeyHeaderName`, `MSB:ApiKey`.
-- Database persistence: none in this service.
-- Invocation logging status: no outbound invocation logging in `PoaInquiryService`.
+- Config keys: `MSB:BaseUrl`, `MSB:PoaInquiryEndpoint`, `MSB:ApiKeyHeaderName`, `MSB:ApiKey`; the official rule is enforced independently of `MSB:PoaInquiryRuleId`.
+- Database persistence: no business record; sanitized invocation records use `MsbInvocationLogs`.
+- Invocation logging status: shared `MsbOutboundInvocation` captures `PoaInquiry` begin/completion; `secretNo` and requester identity are masked before persistence. Logging failures do not block sending.
 
 ## Official Documentation
 
@@ -41,4 +41,4 @@ Response (p. 5): integer `code`, string `msg`, and string `owTrakingCode` on suc
 
 Implementation requires final verification
 
-The service defaults an empty rule from configuration but does not enforce the official rule on nonempty input or validate every required field. Confirm the configured header and complete request/response behavior with MSB. HTTP success alone is not confirmation of business success; the returned `code` must be checked by the caller. The trailing-space message sample requires clarification if returned literally.
+All required request strings are validated before sending. An empty rule becomes `mhlu20po`; other rules are rejected. Fake-handler tests check exact outbound transport, validation, deserialization, sanitized database logs, unchanged wire `secretNo`, and error/logging-failure handling. Confirm the configured header with MSB. HTTP success alone is not confirmation of business success; the returned `code` must be checked by the caller. The trailing-space message sample requires clarification if returned literally.

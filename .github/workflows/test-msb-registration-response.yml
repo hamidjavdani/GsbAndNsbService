@@ -26,6 +26,9 @@ jobs:
       - name: Build
         run: dotnet build .\GSB.Test.Api.csproj --configuration Release --no-restore
 
+      - name: Run Exchange validation and secure logging tests
+        run: dotnet run --project .\Tests\InvocationLogging\InvocationLogging.Tests.csproj --configuration Release
+
       - name: Start API and call official MSB callback route
         shell: powershell
         run: |

@@ -50,7 +50,7 @@ public class PoaEvaluationData
     [JsonPropertyName("DocType")]
     public string? DocType { get; set; }
 
-    [JsonPropertyName("code_DocType")]
+    [JsonPropertyName("DocType_code")]
     public string? CodeDocType { get; set; }
 
     [JsonPropertyName("HasPermission")]
@@ -131,6 +131,6 @@ public class PoaEvaluationPerson
     [JsonPropertyName("RoleType")]
     public string? RoleType { get; set; }
 
-    [JsonPropertyName("code_RoleType_Person")]
+    [JsonPropertyName("Person_RoleType_code")]
     public string? CodeRoleTypePerson { get; set; }
 }

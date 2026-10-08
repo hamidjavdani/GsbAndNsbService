@@ -29,9 +29,9 @@ Response (p. 5): integer `code`, string `msg`, and string `owTrakingCode` on suc
 - Controller: none active for this outbound service; historical controller text is not an active route.
 - Service: [DocumentVerificationService](Services/DocumentVerificationService.cs), `IDocumentVerificationService.G2GInquiryAsync`.
 - Request/Response Models: [G2GInquiryRequest](Models/G2GInquiryRequest.cs), [G2GInquiryResponse](Models/G2GInquiryResponse.cs).
-- Config keys: `MSB:BaseUrl`, `MSB:InquiryEndpoint`, `MSB:RuleId`, `MSB:ApiKeyHeaderName`, `MSB:ApiKey`.
-- Database persistence: none in this service.
-- Invocation logging status: no outbound invocation logging in `DocumentVerificationService`; inbound middleware does not capture this HTTP client call.
+- Config keys: `MSB:BaseUrl`, `MSB:InquiryEndpoint`, `MSB:ApiKeyHeaderName`, `MSB:ApiKey`; the official rule is enforced independently of `MSB:RuleId`.
+- Database persistence: no business record; sanitized outbound invocation records use `MsbInvocationLogs`.
+- Invocation logging status: shared `MsbOutboundInvocation` captures `DocumentVerification` begin/completion, identifiers, masked bodies and HTTP/response metadata; logging failures do not block sending.
 
 ## Official Documentation
 
@@ -41,4 +41,4 @@ Response (p. 5): integer `code`, string `msg`, and string `owTrakingCode` on suc
 
 Implementation requires final verification
 
-The service defaults an empty rule to configuration but does not reject a non-official rule or enforce all required request fields. It checks HTTP status, then deserializes the business code. Confirm runtime configuration and the header difference with MSB; a prior callback test does not verify this outbound inquiry. The trailing-space message sample also needs clarification if MSB emits it literally.
+All required request strings are validated before sending. An empty rule becomes the official `mhrne7iv`; other values are rejected even if configuration contains a different rule. Fake-handler regression tests cover validation, the exact URL/header/media type, deserialization, sanitized persisted logs and failure completion. No real MSB call is made. Confirm runtime configuration and the header difference with MSB; the trailing-space message sample needs clarification if emitted literally. HTTP success is not an independent check of business success.

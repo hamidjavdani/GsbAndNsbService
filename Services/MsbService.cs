@@ -90,7 +90,7 @@ public class MsbService : IMsbService
 
             if (!response.IsSuccessStatusCode)
                 throw new HttpRequestException(
-                    $"MSB cancellation HTTP {(int)response.StatusCode}: {responseContent}");
+                    $"MSB cancellation HTTP {(int)response.StatusCode}; response details omitted to protect secrets.");
 
             return JsonSerializer.Deserialize<Made14CancellationResponse>(
                        responseContent,
@@ -120,6 +120,9 @@ public class MsbService : IMsbService
     private static void ValidateCancellationRequest(
         Made14CancellationRequest request)
     {
+        if (!request.NoToken)
+            throw new ArgumentException("noToken must be true.", nameof(request));
+
         if (string.IsNullOrWhiteSpace(request.OrganId))
             throw new ArgumentException("organId is required.", nameof(request));
 

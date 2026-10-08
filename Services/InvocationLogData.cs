@@ -13,7 +13,7 @@ public static class InvocationLogData
         log.OwTrakingCode = Value(obj, "owTrakingCode", 256) ?? Value(obj, "owTrackingCode", 256);
         log.MapConfirmationTrackingCode = Value(obj, "mapConfirmationTrackingCode", 256);
         var data = Property(obj, "data") as JsonObject;
-        log.RequestId = Value(data, "requestId", 256);
+        log.RequestId = Value(obj, "requestUniqueId", 256) ?? Value(data, "requestId", 256);
         log.TaskId = Value(data, "taskId");
         log.ActivityId = Value(data, "activityId");
         log.ActionId = Value(data, "actionId");

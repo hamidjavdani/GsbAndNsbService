@@ -43,12 +43,12 @@ Implementation requires final verification
 
 MSB confirmation of the implementation's additional `/v1` segment is pending; it must not be treated as an approved endpoint difference. The configured header also differs from the printed header.
 
-The PDF and code have these unresolved spellings; no undocumented alias is assumed:
+The PDF's spellings were audited; the two code-field mappings now follow the matching table and sample. No undocumented alias is assumed:
 
 | Field | PDF table | PDF sample | Current model JSON name |
 |---|---|---|---|
-| Document type code | `DocType_code` | `DocType_code` | `code_DocType` |
+| Document type code | `DocType_code` | `DocType_code` | `DocType_code` |
 | POA expiry | `ADVOCACYENDDATE` | `advocacyEndDate` | `advocacyEndDate` |
-| Person role code | `Person_RoleType_code` | `Person_RoleType_code` | `code_RoleType_Person` |
+| Person role code | `Person_RoleType_code` | `Person_RoleType_code` | `Person_RoleType_code` |
 
-Case-insensitive deserialization handles the expiry capitalization difference, but does not rearrange the other field names. `ImpotrtantAnnexText` is spelled that way in both PDF and model. Confirm the two code-field names with MSB before declaring full contract verification.
+Case-insensitive deserialization handles the expiry capitalization difference. The table and sample both use `DocImage_Base64` and `PersonType_code`, which the model already matches; `64Base_DocImage` and `code_PersonType` are not assumed aliases. `ImpotrtantAnnexText` is spelled that way in both PDF and model. Fake local tests verify the documented mappings. Endpoint confirmation remains outstanding.
